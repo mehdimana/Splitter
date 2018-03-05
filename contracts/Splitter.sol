@@ -7,8 +7,8 @@ contract Splitter {
     }
 
     address public owner;
-    Receiver firstReceiver;
-    Receiver secondReceiver;
+    Receiver public firstReceiver;
+    Receiver public secondReceiver;
     uint public balance; //in wei
     uint private totalAmmountSentByOwner; //in wei
     
