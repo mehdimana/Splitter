@@ -10,7 +10,7 @@ contract Splitter {
     Receiver firstReceiver;
     Receiver secondReceiver;
     uint public balance; //in wei
-    uint private totalAmmountSentByOwner;
+    uint private totalAmmountSentByOwner; //in wei
     
     function Splitter(address receiver1, address receiver2) public {
         owner = msg.sender;
