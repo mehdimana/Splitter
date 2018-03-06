@@ -59,4 +59,102 @@ contract('Splitter', function(accounts) {
 	    }
 	});
 
+	it("should fail if first or second receiver is 0x0", async () => {
+		try {
+	      await Splitter.new(accounts[1], "", {from: owner});
+	      assert.fail('should have thrown before');
+	    } catch(error) {
+				if(error.toString().indexOf("VM Exception while processing transaction") != -1) {
+					//ok test success
+					return new Promise(resolve => resolve("ok"));
+				} else {
+					// if the error is something else (e.g., the assert from previous promise), then we fail the test
+					assert(false, "---"+error.toString());
+				}
+	    }
+
+	    try {
+	      await Splitter.new("", accounts[2], {from: owner});
+	      assert.fail('should have thrown before');
+	    } catch(error) {
+				if(error.toString().indexOf("VM Exception while processing transaction") != -1) {
+					//ok test success
+					return new Promise(resolve => resolve("ok"));
+				} else {
+					// if the error is something else (e.g., the assert from previous promise), then we fail the test
+					assert(false, "---"+error.toString());
+				}
+	    }
+	});
+
+	/**
+		test sending funcds
+	*/
+
+	it("should send funds successfully", function() {
+		return Splitter.deployed().then(function() {
+		  return contract.sendFunds({from: owner, value: 100});
+		}).then(txObject => {
+			assert.equal(1, txObject.receipt.status, "sendFund wass not successfull");
+		});
+	});
+
+	it("should faill when sending 0 funds", function() {
+		return Splitter.deployed().then(function() {
+		  return contract.sendFunds({from: owner, value: 0});
+		}).then(txObject => {
+			console.log(txObject);
+			assert(false, "call did not fail as expected.")
+		}).catch(error => {
+			if(error.toString().indexOf("VM Exception while processing transaction") != -1) {
+					//ok test success					
+				} else {
+					// if the error is something else (e.g., the assert from previous promise), then we fail the test
+					assert(false, error.toString());
+				}
+		});
+	});
+
+	it("should faill when not owner sending funds", function() {
+		return Splitter.deployed().then(function() {
+		  return contract.sendFunds({from: accounts[1], value: 100});
+		}).then(txObject => {
+			console.log(txObject);
+			assert(false, "call did not fail as expected.")
+		}).catch(error => {
+			if(error.toString().indexOf("VM Exception while processing transaction") != -1) {
+					//ok test success					
+				} else {
+					// if the error is something else (e.g., the assert from previous promise), then we fail the test
+					assert(false, error.toString());
+				}
+		});
+	});
+
+	/**
+		test split
+	*/
+
+	it ("should split even balance successfully", function() {
+		return Splitter.deployed().then(function() {
+		  return contract.sendFunds({from: owner, value: 100});
+		}).then(txObject => {
+			assert.equal(1, txObject.receipt.status, "sendFund wass not successfull");
+			return contract.split.call({from: owner});
+		}).then(ammountSplit => {
+			assert.equal(100, ammountSplit, "amount split was incorrect.")
+			return contract.firstReceiver.call({from: owner});
+		}).then(function(actualReceiver){
+			assert.equal(50, actualReceiver[1].toString(10), "first receiver ammount was not well initialized");
+			return contract.secondReceiver.call({from: owner});	
+		}).then(function(actualReceiver){
+			assert.equal(50, actualReceiver[1].toString(10), "second receiver ammount was not well initialized");
+			return contract.balance.call({from: owner});	
+		}).then(function(actualBalance){
+		  	assert.equal(0, actualBalance.toString(10), "balance was not well initialized");
+		  	
+		})
+
+	});
+
  });
