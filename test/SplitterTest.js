@@ -133,4 +133,27 @@ contract('Splitter', function(accounts) {
 		});
 	});
 
+	/**
+		test kill switch
+	*/
+
+	it("should kill the contract when the kill switch is activated", function() {
+		return Splitter.deployed().then(function() {
+			return contract.killContract({from: owner});
+		}).then(txObject => {
+			assert.equal(1, txObject.receipt.status, "kill swith fail to activate.")
+		   return contract.sendFunds({from: owner, value: 100});
+		}).then(txObject => {
+			console.log(txObject);
+			assert(false, "call did not fail as expected.")
+		}).catch(error => {
+			if(error.toString().indexOf("VM Exception while processing transaction") != -1) {
+					//ok test success					
+				} else {
+					// if the error is something else (e.g., the assert from previous promise), then we fail the test
+					assert(false, error.toString());
+				}
+		});
+	});
+
  });

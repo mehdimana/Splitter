@@ -9,6 +9,7 @@ contract Splitter {
     address public owner;
     Receiver public firstReceiver;
     Receiver public secondReceiver;
+    bool public isContractActive;
     
     function Splitter(address receiver1, address receiver2) public {
         owner = msg.sender;
@@ -24,15 +25,19 @@ contract Splitter {
         
         secondReceiver.owner = receiver2;
         secondReceiver.ammountAlreadyReceived = 0;
+        
+        isContractActive = true;
     }
     
     /**
      * owner sends funcds to this contract
      * - only owner can send funds
      * - ammount sent cannot be 0
+     * - amount is split between receivers.
      */
     function sendFunds() public payable returns(bool success) {
         require(msg.sender == owner);
+        require(isContractActive);
         uint ammountToSplit = this.balance;
         assert(ammountToSplit > 0);
         split(ammountToSplit);
@@ -57,4 +62,13 @@ contract Splitter {
         receiver.ammountAlreadyReceived += ammountToSend;
         return receiver;
     }
+    
+    /**
+     * kill switch
+     */
+     function killContract() public returns(bool success) {
+        require(msg.sender == owner);
+         isContractActive = false;
+         return true;
+     }
 }
