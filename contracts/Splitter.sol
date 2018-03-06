@@ -10,10 +10,16 @@ contract Splitter {
     Receiver public firstReceiver;
     Receiver public secondReceiver;
     uint public balance; //in wei
-    uint private totalAmmountSentByOwner; //in wei
+    uint private totalAmmountSentByOwner;
     
     function Splitter(address receiver1, address receiver2) public {
         owner = msg.sender;
+        
+        require(receiver1 != address(0));
+        require(receiver1 != owner);
+        require(receiver2 != address(0));
+        require(receiver2 != owner);
+        
         
         firstReceiver.owner = receiver1;
         firstReceiver.ammountAlreadyReceived = 0;
@@ -34,6 +40,7 @@ contract Splitter {
         require(msg.sender == owner);
         assert(msg.value > 0);
         totalAmmountSentByOwner += msg.value;
+        balance += msg.value;
         return true;
     }
     
@@ -48,8 +55,8 @@ contract Splitter {
         require(msg.sender == owner); //only Alice can split.
         
         uint actualBalance = balance;
-        splitTo(firstReceiver);
-        splitTo(secondReceiver);
+        firstReceiver = splitTo(firstReceiver);
+        secondReceiver = splitTo(secondReceiver);
         
         return actualBalance - balance;
     }
@@ -57,18 +64,19 @@ contract Splitter {
     /**
      * sends funds to one receiver
      */
-    function splitTo (Receiver receiver) private {
+    function splitTo(Receiver receiver) private returns(Receiver updatedReceiver) {
         uint ammountToSendToEachReceiver = totalAmmountSentByOwner / 2; //TODO how to deal with number non dividable by 2?
         assert(ammountToSendToEachReceiver > receiver.ammountAlreadyReceived); // this situation should never occur
         
         uint ammountToSendToThisReceiver = ammountToSendToEachReceiver - receiver.ammountAlreadyReceived;
         if (ammountToSendToThisReceiver > 0) {
-            if (firstReceiver.owner.send(ammountToSendToThisReceiver)) {
-                firstReceiver.ammountAlreadyReceived += ammountToSendToThisReceiver;
+            if (receiver.owner.send(ammountToSendToThisReceiver)) {
+                receiver.ammountAlreadyReceived += ammountToSendToThisReceiver;
                 balance -= ammountToSendToThisReceiver;
             } else {
                 //TODO handle error
             }
         }
+        return receiver;
     }
 }
