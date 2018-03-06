@@ -24,11 +24,7 @@ contract('Splitter', function(accounts) {
 		}).then(function(actualReceiver){
 		  assert.equal(accounts[2], actualReceiver[0], "second receiver was not well initialized");
 		  assert.equal(0, actualReceiver[1].toString(10), "second receiver ammount was not well initialized");
-		  return contract.balance.call({from: owner});	
-		}).then(function(actualBalance){
-		  assert.equal(0, actualBalance.toString(10), "balance was not well initialized");
-		  	
-		})
+		});
 	});
 
 	it("should fail if first or second receiver is the owner", async () => {
@@ -96,7 +92,13 @@ contract('Splitter', function(accounts) {
 		  return contract.sendFunds({from: owner, value: 100});
 		}).then(txObject => {
 			assert.equal(1, txObject.receipt.status, "sendFund wass not successfull");
-		});
+			return contract.firstReceiver.call({from: owner});
+		}).then(function(actualReceiver){
+			assert.equal(50, actualReceiver[1].toString(10), "first receiver ammount was not well initialized");
+			return contract.secondReceiver.call({from: owner});	
+		}).then(function(actualReceiver){
+			assert.equal(50, actualReceiver[1].toString(10), "second receiver ammount was not well initialized");	
+		})
 	});
 
 	it("should faill when sending 0 funds", function() {
@@ -129,32 +131,6 @@ contract('Splitter', function(accounts) {
 					assert(false, error.toString());
 				}
 		});
-	});
-
-	/**
-		test split
-	*/
-
-	it ("should split even balance successfully", function() {
-		return Splitter.deployed().then(function() {
-		  return contract.sendFunds({from: owner, value: 100});
-		}).then(txObject => {
-			assert.equal(1, txObject.receipt.status, "sendFund wass not successfull");
-			return contract.split.call({from: owner});
-		}).then(ammountSplit => {
-			assert.equal(100, ammountSplit, "amount split was incorrect.")
-			return contract.firstReceiver.call({from: owner});
-		}).then(function(actualReceiver){
-			assert.equal(50, actualReceiver[1].toString(10), "first receiver ammount was not well initialized");
-			return contract.secondReceiver.call({from: owner});	
-		}).then(function(actualReceiver){
-			assert.equal(50, actualReceiver[1].toString(10), "second receiver ammount was not well initialized");
-			return contract.balance.call({from: owner});	
-		}).then(function(actualBalance){
-		  	assert.equal(0, actualBalance.toString(10), "balance was not well initialized");
-		  	
-		})
-
 	});
 
  });

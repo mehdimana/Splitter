@@ -9,8 +9,6 @@ contract Splitter {
     address public owner;
     Receiver public firstReceiver;
     Receiver public secondReceiver;
-    uint public balance; //in wei
-    uint private totalAmmountSentByOwner;
     
     function Splitter(address receiver1, address receiver2) public {
         owner = msg.sender;
@@ -26,9 +24,6 @@ contract Splitter {
         
         secondReceiver.owner = receiver2;
         secondReceiver.ammountAlreadyReceived = 0;
-        
-        balance = 0;
-        totalAmmountSentByOwner = 0;
     }
     
     /**
@@ -38,45 +33,28 @@ contract Splitter {
      */
     function sendFunds() public payable returns(bool success) {
         require(msg.sender == owner);
-        assert(msg.value > 0);
-        totalAmmountSentByOwner += msg.value;
-        balance += msg.value;
+        uint ammountToSplit = this.balance;
+        assert(ammountToSplit > 0);
+        split(ammountToSplit);
         return true;
     }
     
     /**
-     * owner split the funds in this contract between two receivers.
-     * - balnce should be > 0
-     * - the sender should be the owner
+     * transfer the funds in this contract between two receivers.
      * returns the total ammount that is send to the receivers;
      */
-    function split() public returns(uint ammountSplit) {
-        require(balance > 0);
-        require(msg.sender == owner); //only Alice can split.
-        
-        uint actualBalance = balance;
-        firstReceiver = splitTo(firstReceiver);
-        secondReceiver = splitTo(secondReceiver);
-        
-        return actualBalance - balance;
+    function split(uint ammountToSplit) private {
+        uint ammountToSend = ammountToSplit /2;
+        firstReceiver = splitTo(firstReceiver, ammountToSend);
+        secondReceiver = splitTo(secondReceiver, ammountToSend);
     }
     
     /**
      * sends funds to one receiver
      */
-    function splitTo(Receiver receiver) private returns(Receiver updatedReceiver) {
-        uint ammountToSendToEachReceiver = totalAmmountSentByOwner / 2; //TODO how to deal with number non dividable by 2?
-        assert(ammountToSendToEachReceiver > receiver.ammountAlreadyReceived); // this situation should never occur
-        
-        uint ammountToSendToThisReceiver = ammountToSendToEachReceiver - receiver.ammountAlreadyReceived;
-        if (ammountToSendToThisReceiver > 0) {
-            if (receiver.owner.send(ammountToSendToThisReceiver)) {
-                receiver.ammountAlreadyReceived += ammountToSendToThisReceiver;
-                balance -= ammountToSendToThisReceiver;
-            } else {
-                //TODO handle error
-            }
-        }
+    function splitTo(Receiver receiver, uint ammountToSend) private returns(Receiver){
+        receiver.owner.transfer(ammountToSend);
+        receiver.ammountAlreadyReceived += ammountToSend;
         return receiver;
     }
 }
