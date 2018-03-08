@@ -55,18 +55,10 @@ contract Splitter {
         require(isContractActive);
         uint ammountToSplit = msg.value;
         assert(ammountToSplit > 0);
-        split(ammountToSplit);
-        return true;
-    }
-    
-    /**
-     * transfer the funds in this contract between two receivers.
-     * returns the total ammount that is send to the receivers;
-     */
-    function split(uint ammountToSplit) private {
         uint ammountReceived = ammountToSplit /2;
         firstReceiver.ammountAvailable += ammountReceived;
-        secondReceiver.ammountAvailable += ammountReceived;
+        secondReceiver.ammountAvailable += ammountToSplit - ammountReceived;
+        return true;
     }
 
     /**
