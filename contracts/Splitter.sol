@@ -29,6 +29,7 @@ contract Splitter {
      * a receiver withdraw his available balance
      */
     function withdrawFunds() public {
+        require(isContractActive);
         uint ammountToTransfer;
         if (msg.sender == firstReceiver.owner) {
             ammountToTransfer = firstReceiver.ammountAvailable;
@@ -52,7 +53,7 @@ contract Splitter {
     function sendFunds() public payable returns(bool success) {
         require(msg.sender == owner);
         require(isContractActive);
-        uint ammountToSplit = this.balance;
+        uint ammountToSplit = msg.value;
         assert(ammountToSplit > 0);
         split(ammountToSplit);
         return true;
