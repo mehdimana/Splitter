@@ -91,13 +91,13 @@ contract('Splitter', function(accounts) {
 		return Splitter.deployed().then(function() {
 		  return contract.sendFunds({from: owner, value: 100});
 		}).then(txObject => {
-			assert.equal(1, txObject.receipt.status, "sendFund wass not successfull");
+			assert.strictEqual('0x01', txObject.receipt.status.toString(10), "sendFund wass not successfull");
 			return contract.firstReceiver.call({from: owner});
 		}).then(function(actualReceiver){
-			assert.equal(50, actualReceiver[1].toString(10), "first receiver ammount was not well initialized");
+			assert.strictEqual('50', actualReceiver[1].toString(10), "first receiver ammount was not well initialized");
 			return contract.secondReceiver.call({from: owner});	
 		}).then(function(actualReceiver){
-			assert.equal(50, actualReceiver[1].toString(10), "second receiver ammount was not well initialized");	
+			assert.strictEqual('50', actualReceiver[1].toString(10), "second receiver ammount was not well initialized");	
 		})
 	});
 
